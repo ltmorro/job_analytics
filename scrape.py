@@ -42,7 +42,7 @@ def download_jobs(job, location, file_path):
 
     jobs = []
     i=1 #keep track of loop for printing
-    for link in links[:1]:
+    for link in links:
         print("Getting Job Posting " + str(i))
         i+=1
         response = requests.get(base_url+link)
@@ -63,9 +63,11 @@ def download_jobs(job, location, file_path):
                 #remove stop words which dont add any meaning
                 content = [word for word in content if word not in stop_words and word.isalpha()]
             except:
+                print("Trying again")
                 response = requests.get(base_url+link)
                 url = response.url
                 job = BeautifulSoup(response.content, "lxml")
+                time.sleep(1)
                 continue
             break
         jobs.append({"url":url, "title":title, "company":company, "content":list(set(content))})
@@ -76,9 +78,9 @@ def download_jobs(job, location, file_path):
 
     job_df.to_csv(location+".csv")
 
-
 if __name__ == "__main__":
-    top_cities = ["New+York", "Chicago", "Boston", "San+Francisco", "Austin", "Houston", "Seattle"]
+    #"New+York", "Chicago", "Boston","San+Francisco",
+    top_cities = [ "Austin", "Houston", "Seattle"]
     for city in top_cities:
         print("Finding jobs in " + city)
         download_jobs("data+scientist", city, "")
