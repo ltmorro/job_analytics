@@ -22,7 +22,8 @@ def get_links(job, location):
     #grab the number of pages from search result "Page x of y jobs"
     num_pages = soup.find(id="searchCount").get_text()
     print(num_pages)
-    num_pages = math.ceil(int(num_pages.split()[3]) / jobs_per_page) # get the ceiling of the num of jobs / jobs per page
+    # get the ceiling of the num of jobs / jobs per page
+    num_pages = math.ceil(int(num_pages.split()[3]) / jobs_per_page)
 
     for i in range(num_pages):
         request_data = {"q":job, "l":location, "limit":jobs_per_page, "start":i*jobs_per_page}
@@ -42,7 +43,7 @@ def get_links(job, location):
     return links
 
 #downloadJobs pulls all relevant job listings for the set of links and saves them at file_path
-def download_jobs(links, file_path):
+def download_jobs(links, location, file_path):
     jobs = []
     i=1 #keep track of loop for printing
     for link in links:
@@ -52,7 +53,7 @@ def download_jobs(links, file_path):
         response = requests.get(base_url+link)
         url = response.url
         job = BeautifulSoup(response.content, "html.parser")
-
+        print(url)
         #stop words to remove
         stop_words = nltk.corpus.stopwords.words('english')
         #sometimes the http request breaks so we try until we succeed
@@ -61,17 +62,21 @@ def download_jobs(links, file_path):
             #use a try because some responses get corrupted during transmission
             try:
                 #job title
-                title = job.find("h3", attrs={"class":"icl-u-xs-mb--xs icl-u-xs-mt--none jobsearch-JobInfoHeader-title"}).get_text(separator="\n")
+                title = job.find("h3", attrs={"class":"icl-u-xs-mb--xs icl-u-xs-mt--none jobsearch-JobInfoHeader-title"})
+                title= title.get_text(separator="\n")
                 #company info
-                company = job.find("div", attrs={"class":"icl-u-lg-mr--sm icl-u-xs-mr--xs"}).get_text()
+                company = job.find("div", attrs={"class":"icl-u-lg-mr--sm icl-u-xs-mr--xs"})
+                company= company.get_text()
                 #grab the content and split it in to words
-                content = job.find("div", attrs={"class":"jobsearch-JobComponent-description icl-u-xs-mt--md"}).get_text(separator="\n")
+                content = job.find("div", attrs={"class":"jobsearch-JobComponent-description icl-u-xs-mt--md"})
+                content= content.get_text(separator="\n")
                 #split in to words from the text using nltk tokenize
                 content = nltk.tokenize.word_tokenize(content)
                 #remove stop words which dont add any meaning
                 content = [word for word in content if word not in stop_words]
             except:
                 print("Trying again")
+                #send a new requestw
                 response = requests.get(base_url+link)
                 url = response.url
                 job = BeautifulSoup(response.content, "html.parser")
@@ -95,4 +100,4 @@ if __name__ == "__main__":
     for city in top_cities:
         print("Finding jobs in " + city)
         links=get_links("data+scientist", city)
-        download_jobs(links, "")
+        download_jobs(links, city, "")
