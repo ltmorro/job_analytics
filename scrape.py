@@ -22,8 +22,10 @@ def get_links(job, location):
     #grab the number of pages from search result "Page x of y jobs"
     num_pages = soup.find(id="searchCount").get_text()
     print(num_pages)
+    # get the integer value from x
+    num_pages = int(num_pages.split()[3].translate(str.maketrans("", "", string.punctuation)))
     # get the ceiling of the num of jobs / jobs per page
-    num_pages = math.ceil(int(num_pages.split()[3]) / jobs_per_page)
+    num_pages = math.ceil(num_pages / jobs_per_page)
 
     for i in range(num_pages):
         request_data = {"q":job, "l":location, "limit":jobs_per_page, "start":i*jobs_per_page}
@@ -93,10 +95,10 @@ def download_jobs(links, location, file_path):
 
     #convert the dictionary to a pandas dataframe and save as a csv
     job_df = pd.DataFrame.from_dict(jobs)
-    job_df.to_csv(location+".csv")
+    job_df.to_csv("all.csv")
 
 if __name__ == "__main__":
-    top_cities = ["New+York", "Chicago", "Boston","San+Francisco","Houston","Seattle", "Denver"]
+    top_cities = [""]
     for city in top_cities:
         print("Finding jobs in " + city)
         links=get_links("data+scientist", city)
